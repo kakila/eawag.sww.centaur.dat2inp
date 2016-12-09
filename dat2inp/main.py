@@ -10,27 +10,55 @@
 
 conduits = []
 coordinates = []
+junctions = []
+polygons = []
+outfalls = []
 subcatchments = []
 
 headerFile = "../data/header.inp"
 
 condsFile = '../data/conduits.dat'
 coordsFile = '../data/coordinates.dat'
+juncsFile = '../data/junctions.dat'
+mapFile = '../data/map.dat'
+fallsFile = '../data/outfalls.dat'
+polysFile = '../data/polygons.dat'
 catchFile = '../data/subcatchments.dat'
+
+
+outputFile = "/home/desouslu/EAWAG/out.inp"
 
 for line in open(condsFile, 'r'):
     conduits.append(line.rstrip())
     
 for line in open(coordsFile, 'r'):
     coordinates.append(line.rstrip())
-    
+      
+for line in open(juncsFile, 'r'):
+    junctions.append(line.rstrip())
+ 
+for line in open(fallsFile, 'r'):
+    outfalls.append(line.rstrip()) 
+       
+for line in open(polysFile, 'r'):
+    polygons.append(line.rstrip())
+         
 for line in open(catchFile, 'r'):
     subcatchments.append(line.rstrip())
     
-fh = open("out.inp","w")
+fh = open(outputFile,"w")
 
 for line in open(headerFile, 'r'):
     print(line.rstrip(), file=fh)
+    
+
+# Get rid of headers
+conduits.pop(0)
+coordinates.pop(0)
+junctions.pop(0)
+outfalls.pop(0)
+polygons.pop(0)
+subcatchments.pop(0)
     
 
 print("\n[RAINGAGES]", file=fh)
@@ -49,7 +77,7 @@ print(";;-------------- ---------------- ---------------- -------- -------- ----
 ind = 1
 for catch in subcatchments:
     sub = catch.split(" ") 
-    print(str(ind) + " 0 " + str(ind) + " " + str(float(sub[1])) + " 100 " + str(float(sub[2])) + " " + str(float(sub[3])) + " 0 0", file=fh)
+    print(str(ind) + " " + str(ind) + " " + sub[0] + " " + sub[1] + " 100 " + sub[2] + " " + sub[3] + " 0 0", file=fh)
     ind = ind + 1
     
     
@@ -76,37 +104,55 @@ for catch in subcatchments:
 print("\n[JUNCTIONS]", file=fh)
 print(";;Name           Elevation  MaxDepth   InitDepth  SurDepth   Aponded   ", file=fh)
 print(";;-------------- ---------- ---------- ---------- ---------- ----------", file=fh)
-# Dummy data for now
-z = 100
-for coord in coordinates:
-    junc = coord.split(" ") 
-    print(str(int(float(junc[1]))) + " " + str(z) + "    1.5     0     0     0", file=fh)
-    z = z - 1
+# The first junction is an outfall
+junctions.pop(0)
+ind = 2
+for junc in junctions:
+    print(str(ind) + " " + junc.split(" ")[0] + "    1.5     0     0     0", file=fh)
+    ind = ind + 1
+
+
+print("\n[OUTFALLS]", file=fh)
+print(";;Name           Elevation  Type       Stage Data       Gated    Route To ", file=fh)       
+print(";;-------------- ---------- ---------- ---------------- -------- ----------------", file=fh)
+for out in outfalls:
+    fall = out.split(" ")
+    print(fall[0] + " " + fall[1] + "    FREE                        NO            ", file=fh)
 
     
 print("\n[CONDUITS]", file=fh)
 print(";;Name           From Node        To Node          Length     Roughness  InOffset   OutOffset  InitFlow   MaxFlow", file=fh)   
 print(";;-------------- ---------------- ---------------- ---------- ---------- ---------- ---------- ---------- ----------", file=fh)
+ind = 1
 for cond in conduits:
     pipe = cond.split(" ") 
-    print(str(int(float(pipe[1]))) + " " + str(int(float(pipe[2]))) + " " + str(int(float(pipe[3]))) + " 0 0.013 0 0 0 0", file=fh)
+    print(str(ind) + " " + pipe[0] + " " + pipe[1] + " " + pipe[2] + " 0.013 0 0 0 0", file=fh)
+    ind = ind + 1
     
     
 print("\n[XSECTIONS]", file=fh)
 print(";;Link           Shape        Geom1            Geom2      Geom3      Geom4      Barrels    Culvert ", file=fh)  
 print(";;-------------- ------------ ---------------- ---------- ---------- ---------- ---------- ----------", file=fh)
-for cond in conduits:
-    pipe = cond.split(" ")
-    print(str(int(float(pipe[1]))) + "             CIRCULAR     0.5              0          0          0          1", file=fh)  
+for ind in range(len(conduits)):
+    print(str(ind+1) + "             CIRCULAR     0.5              0          0          0          1", file=fh)  
     
     
 print("\n[COORDINATES]                                       ", file=fh)
 print(";;Node           X-Coord            Y-Coord           ", file=fh)
 print(";;-------------- ------------------ ------------------", file=fh)
-# Note that coordinates are given in km
+ind = 1
 for coord in coordinates:
     junc = coord.split(" ") 
-    print(str(int(float(junc[1]))) + " " + str(float(junc[2]) * 1000) + " " + str(float(junc[3]) * 1000), file=fh)
+    print(str(ind) + " " + junc[0] + " " + junc[1], file=fh)
+    ind = ind + 1
+    
+    
+print("\n[Polygons]                                      ", file=fh)
+print(";;Subcatchment   X-Coord            Y-Coord           ", file=fh)
+print(";;-------------- ------------------ ------------------", file=fh)
+for poly in polygons:
+    pol = poly.split(" ") 
+    print(pol[0] + " " + pol[1] + " " + pol[2], file=fh)
     
 
 print("\n[REPORT]", file=fh)
